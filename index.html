@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lumiere &#8212; Fine Dining</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.143.0/build/three.module.js","three/examples/jsm/":"https://unpkg.com/three@0.143.0/examples/jsm/"}}</script>
+<style>
+
+/* ── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --bg:       #09070480;
+  --bg-real:  #090704;
+  --ink:      #ffffff;
+  --muted:    #e8e0d0;
+  --faint:    #b0a890;
+  --line:     rgba(201,168,76,.12);
+  --line2:    rgba(201,168,76,.24);
+  --gold:     #c9a84c;
+  --gold-dk:  #8b6914;
+  --gold-lt:  #f0d580;
+  --glass:    rgba(10,8,5,.68);
+  --glass2:   rgba(15,12,8,.84);
+  --maxw:     1160px;
+  --r:        4px;
+  --r2:       12px;
+  --serif:    'Cormorant Garamond', Georgia, serif;
+  --display:  'Playfair Display', Georgia, serif;
+  --ui:       'Inter', -apple-system, sans-serif;
+  --shadow:   0 40px 100px -20px rgba(0,0,0,.95);
+  --glow-g:   0 0 48px rgba(201,168,76,.18);
+}
+
+/* ── RESET ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--serif);
+  color: var(--ink);
+  background: var(--bg-real);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+
+/* ── LENIS ──────────────────────────────────────────────────────── */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ── SCROLL REVEAL ──────────────────────────────────────────────── */
+[data-r], [data-rl], [data-rr] {
+  will-change: opacity, transform;
+  transition: opacity .75s cubic-bezier(.16,1,.3,1),
+              transform .75s cubic-bezier(.16,1,.3,1);
+  transition-delay: var(--d, 0ms);
+}
+[data-r]  { opacity: 0; transform: translateY(22px); }
+[data-rl] { opacity: 0; transform: translateX(-26px); }
+[data-rr] { opacity: 0; transform: translateX(26px); }
+[data-r].on, [data-rl].on, [data-rr].on { opacity: 1; transform: none; }
+
+/* ── LAYOUT ─────────────────────────────────────────────────────── */
+.bg-slider {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+.bg-slide {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 2s ease, transform 12s linear;
+  transform: scale(1.05);
+}
+.bg-slide.active { opacity: 1; transform: scale(1); }
+.bg-overlay {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(9,7,4,0.65) 0%, rgba(9,7,4,0.95) 100%);
+}
+.plate-slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; transform: translateY(15px);
+  transition: opacity 1s ease, transform 1s ease;
+  pointer-events: none;
+}
+.plate-slide.active {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+.page { position: relative; z-index: 1; }
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 48px; }
+.sec  { padding: clamp(80px,10vw,140px) 0; }
+
+/* ── TYPOGRAPHY ─────────────────────────────────────────────────── */
+.eyebrow {
+  display: block;
+  font-family: var(--ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+.title-xl {
+  font-family: var(--display);
+  font-size: clamp(48px, 7.5vw, 100px);
+  font-weight: 400;
+  line-height: .97;
+  letter-spacing: -.02em;
+  color: var(--ink);
+}
+.title-xl em { font-style: italic; color: var(--gold-lt); }
+.title-xl strong { font-weight: 700; }
+
+.title-lg {
+  font-family: var(--display);
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -.015em;
+}
+.title-lg em { font-style: italic; color: var(--gold-lt); }
+
+.body-txt {
+  font-family: var(--ui);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--muted);
+  max-width: 520px;
+}
+
+/* ── BUTTONS ────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  padding: 14px 38px;
+  border: none;
+  border-radius: var(--r);
+  transition: transform .2s ease, box-shadow .3s ease, background .2s ease;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dk) 100%);
+  color: #1a0e02;
+  box-shadow: 0 8px 36px -8px rgba(201,168,76,.5);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 44px -8px rgba(201,168,76,.65);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(242,234,216,.2);
+  padding: 13px 38px;
+}
+.btn-outline:hover {
+  border-color: rgba(242,234,216,.45);
+  background: rgba(242,234,216,.04);
+  transform: translateY(-1px);
+}
+
+/* ── DIVIDER ────────────────────────────────────────────────────── */
+.ornament-divider {
+  display: flex; align-items: center; gap: 16px;
+  margin: 56px auto;
+  max-width: 240px;
+}
+.ornament-divider::before,
+.ornament-divider::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: .5;
+}
+.ornament-diamond {
+  width: 8px; height: 8px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  opacity: .7;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NAV
+══════════════════════════════════════════════════════════════════ */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28px 48px;
+  background: linear-gradient(180deg, rgba(9,7,4,.9) 0%, transparent 100%);
+  transition: padding .35s ease, background .35s ease, border-color .35s ease;
+  border-bottom: 1px solid transparent;
+}
+.nav.stuck {
+  padding: 18px 48px;
+  background: rgba(9,7,4,.97);
+  border-bottom-color: var(--line);
+  backdrop-filter: blur(24px);
+}
+.brand {
+  display: flex; align-items: center; gap: 11px;
+  font-family: var(--display);
+  font-size: 22px;
+  font-style: italic;
+  color: var(--gold-lt);
+  letter-spacing: .04em;
+  line-height: 1;
+}
+.brand-gem {
+  width: 10px; height: 10px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px rgba(201,168,76,.6);
+  flex-shrink: 0;
+}
+.nav-links {
+  display: flex; gap: 36px; list-style: none;
+}
+.nav-links a {
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(242,234,216,.5);
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--gold-lt); }
+.nav-cta {
+  font-family: var(--ui);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: transparent;
+  border: 1px solid rgba(201,168,76,.32);
+  padding: 9px 22px;
+  border-radius: var(--r);
+  transition: all .25s;
+}
+.nav-cta:hover {
+  background: rgba(201,168,76,.09);
+  border-color: rgba(201,168,76,.6);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HERO
+══════════════════════════════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  background:
+    radial-gradient(ellipse 110% 65% at 50% -8%,
+      rgba(9,7,4,.92) 0%,
+      rgba(9,7,4,.45) 50%,
+      transparent 70%);
+  position: relative;
+}
+.hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 35% at 50% 100%,
+    rgba(201,168,76,.07), transparent 65%);
+  pointer-events: none;
+}
+.hero-kicker {
+  font-family: var(--ui);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: .38em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,.7);
+  margin-bottom: 28px;
+  position: relative; z-index: 1;
+}
+.hero-title {
+  position: relative; z-index: 1;
+  margin-bottom: 24px;
+}
+.hero-line {
+  width: 1px; height: 52px;
+  background: linear-gradient(180deg, var(--gold), transparent);
+  margin: 0 auto 36px;
+  position: relative; z-index: 1;
+}
+.hero-sub {
+  font-family: var(--ui);
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(242,234,216,.32);
+  margin-bottom: 40px;
+  position: relative; z-index: 1;
+}
+.hero-ctas {
+  display: flex; gap: 14px;
+  justify-content: center; flex-wrap: wrap;
+  position: relative; z-index: 1;
+}
+
+/* Press strip */
+.press {
+  padding: 0 48px clamp(64px,8vw,100px);
+  text-align: center;
+}
+.press-label {
+  font-family: var(--ui);
+  font-size: 9.5px;
+  letter-spacing: .36em;
+  text-transform: uppercase;
+  color: rgba(242,234,216,.2);
+  margin-bottom: 22px;
+}
+.press-row {
+  display: flex; gap: clamp(24px,4vw,56px);
+  justify-content: center; flex-wrap: wrap; align-items: center;
+}
+.press-name {
+  font-family: var(--display);
+  font-size: 17px;
+  font-style: italic;
+  color: rgba(242,234,216,.25);
+  letter-spacing: .06em;
+  transition: color .25s;
+}
+.press-name:hover { color: rgba(201,168,76,.55); }
+
+/* ══════════════════════════════════════════════════════════════════
+   ABOUT / INTRO SPLIT
+══════════════════════════════════════════════════════════════════ */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(48px,7vw,96px);
+  align-items: center;
+}
+.about-copy { display: flex; flex-direction: column; gap: 20px; }
+.about-nums {
+  display: flex; gap: 36px; align-items: stretch;
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+  margin-top: 8px;
+}
+.about-num-item { flex: 1; }
+.about-num-val {
+  font-family: var(--display);
+  font-size: 40px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.about-num-lbl {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #c8bca8;
+}
+.about-num-sep {
+  width: 1px;
+  background: var(--line);
+  align-self: stretch;
+}
+
+/* Plate visual */
+.plate-frame {
+  position: relative;
+  aspect-ratio: 4/5;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background:
+    radial-gradient(ellipse at 42% 38%,
+      rgba(201,168,76,.07), transparent 55%),
+    linear-gradient(160deg, rgba(22,16,8,.9), rgba(9,7,4,.97));
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.plate-frame::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(201,168,76,.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.plate-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.plate-caption {
+  font-family: var(--display);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--gold);
+  opacity: .7;
+}
+.plate-badge {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  background: rgba(9,7,4,.94);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 10px 16px;
+  backdrop-filter: blur(16px);
+}
+.plate-badge-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.plate-badge-note {
+  display: block;
+  font-family: var(--ui);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: .1em;
+  margin-top: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MENU CARDS
+══════════════════════════════════════════════════════════════════ */
+.menu-head {
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto 56px;
+}
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.menu-card {
+  background: rgba(9,7,4,.94);
+  padding: 36px 30px;
+  display: flex; flex-direction: column;
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+  transition: background .3s ease;
+}
+.menu-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.menu-card:hover { background: rgba(15,11,6,.98); }
+.menu-card:hover::after { opacity: 1; }
+.menu-card-no {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .24em;
+  color: var(--gold-dk);
+  margin-bottom: 20px;
+}
+.menu-icon {
+  width: 54px; height: 54px;
+  margin-bottom: 22px;
+}
+.menu-card h3 {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.menu-card p {
+  font-family: var(--ui);
+  font-size: 15px;
+  line-height: 1.82;
+  color: var(--muted);
+  font-weight: 300;
+  flex: 1;
+}
+.menu-tag {
+  margin-top: 22px;
+  display: inline-block;
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid rgba(201,168,76,.26);
+  padding-bottom: 3px;
+  align-self: flex-start;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TASTING MENU
+══════════════════════════════════════════════════════════════════ */
+.tasting-band {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(201,168,76,.04) 50%,
+    transparent);
+  padding: 80px 48px;
+  margin: 0;
+}
+.tasting-head {
+  text-align: center;
+  margin-bottom: 64px;
+}
+.tasting-head p {
+  font-family: var(--ui);
+  font-size: 13px;
+  line-height: 1.85;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 440px;
+  margin: 16px auto 0;
+}
+.tasting-layout {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 0;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.tasting-col {
+  display: flex; flex-direction: column; gap: 44px;
+}
+.tasting-col.right { padding-top: 64px; }
+.tasting-spine {
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 8px; padding-bottom: 8px;
+}
+.tasting-spine-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 12px rgba(201,168,76,.7);
+  flex-shrink: 0;
+}
+.tasting-spine-line {
+  flex: 1;
+  width: 1px;
+  background: linear-gradient(180deg,
+    var(--gold) 0%,
+    rgba(201,168,76,.15) 100%);
+  min-height: 52px;
+}
+.tasting-spine-end {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,.6);
+  flex-shrink: 0;
+}
+.course {
+  position: relative;
+  padding-left: 16px;
+}
+.tasting-col.right .course {
+  padding-left: 0;
+  padding-right: 16px;
+  text-align: right;
+}
+.course::before {
+  content: '';
+  position: absolute;
+  top: 8px; left: -1px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(201,168,76,.35);
+}
+.tasting-col.right .course::before {
+  left: auto; right: -1px;
+}
+.course-no {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--gold-dk);
+  margin-bottom: 8px;
+}
+.course-title {
+  font-family: var(--display);
+  font-size: 23px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.course-title em { font-style: italic; color: var(--gold-lt); }
+.course-desc {
+  font-family: var(--ui);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+  font-weight: 300;
+}
+.course-marker {
+  display: inline-block;
+  width: 28px; height: 1px;
+  background: var(--gold);
+  opacity: .4;
+  margin-bottom: 12px;
+  vertical-align: middle;
+}
+.tasting-col.right .course-marker {
+  float: right;
+  clear: both;
+  margin-bottom: 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EXPERIENCE SECTION
+══════════════════════════════════════════════════════════════════ */
+.exp-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(48px,7vw,88px);
+  align-items: center;
+}
+.exp-copy { display: flex; flex-direction: column; gap: 18px; }
+
+/* Live service panel */
+.service-panel {
+  background: var(--glass2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r2);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(24px);
+}
+.sp-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.sp-title {
+  font-size: 13px;
+  letter-spacing: .04em;
+  color: var(--ink);
+}
+.sp-live {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.sp-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: blink 2s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+.sp-rows { display: flex; flex-direction: column; gap: 13px; }
+.sp-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 10px; align-items: center;
+}
+.sp-num {
+  font-family: var(--ui);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: .1em;
+}
+.sp-name {
+  font-family: var(--display);
+  font-size: 13.5px;
+}
+.sp-status {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.st-done { color: var(--gold); }
+.st-now { color: #9de8a0; display: flex; align-items: center; gap: 5px; }
+.st-wait { color: var(--faint); }
+.st-live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #9de8a0;
+  animation: blink 1.4s infinite;
+}
+.sp-prog {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.sp-prog-lbl {
+  display: flex; justify-content: space-between;
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 9px;
+}
+.sp-prog-lbl span:last-child { color: var(--gold); }
+.sp-track {
+  height: 2px;
+  background: rgba(255,255,255,.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.sp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dk), var(--gold));
+  border-radius: 99px;
+  animation: fill-prog 1.8s cubic-bezier(.22,.7,.2,1) .4s both;
+}
+@keyframes fill-prog { from{width:0} to{width:62%} }
+
+/* Stats bar */
+.stat-bar {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-top: 56px;
+  grid-column: 1/-1;
+}
+.stat-cell {
+  background: rgba(9,7,4,.92);
+  padding: 28px 22px;
+  position: relative;
+}
+.stat-cell::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  opacity: .32;
+}
+.stat-val {
+  font-family: var(--display);
+  font-size: clamp(30px,3.5vw,46px);
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.stat-val em { font-style: italic; color: var(--gold-lt); }
+.stat-lbl {
+  font-family: var(--ui);
+  font-size: 13px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #c8bca8;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   AMBIANCE PANELS
+══════════════════════════════════════════════════════════════════ */
+.ambiance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: var(--line);
+}
+.amb-panel {
+  background: rgba(9,7,4,.92);
+  padding: 44px 40px;
+  min-height: 280px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  position: relative; overflow: hidden;
+  transition: background .3s ease;
+}
+.amb-panel:hover { background: rgba(13,10,6,.98); }
+.amb-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 75% 55% at 50% 0%,
+    rgba(201,168,76,.07), transparent 60%);
+  pointer-events: none;
+}
+.amb-bg-glyph {
+  position: absolute;
+  top: 24px; right: 28px;
+  font-size: 64px;
+  opacity: .055;
+  font-family: var(--display);
+  font-style: italic;
+  color: var(--gold);
+  line-height: 1;
+  user-select: none;
+}
+.amb-panel h3 {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.12;
+  margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+.amb-panel h3 em { font-style: italic; color: var(--gold-lt); }
+.amb-panel p {
+  font-family: var(--ui);
+  font-size: 15px;
+  line-height: 1.82;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 340px;
+  position: relative; z-index: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CTA
+══════════════════════════════════════════════════════════════════ */
+.cta-wrap {
+  text-align: center;
+  padding: clamp(96px,13vw,160px) 48px clamp(72px,9vw,120px);
+  position: relative;
+}
+.cta-wrap::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 65% 50% at 50% 50%,
+    rgba(201,168,76,.055), transparent 68%);
+  pointer-events: none;
+}
+.cta-kicker {
+  font-family: var(--ui);
+  font-size: 10.5px;
+  letter-spacing: .36em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,.65);
+  margin-bottom: 24px;
+}
+.cta-title { margin-bottom: 24px; }
+.cta-body {
+  font-family: var(--ui);
+  font-size: 17px;
+  line-height: 1.9;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 460px;
+  margin: 0 auto 44px;
+}
+.cta-btns {
+  display: flex; gap: 14px;
+  justify-content: center; flex-wrap: wrap;
+}
+.cta-footnote {
+  margin-top: 24px;
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #c8bca8;
+}
+.cta-footnote b { color: rgba(201,168,76,.45); font-weight: 400; }
+
+/* ══════════════════════════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════════════════════════ */
+.footer-outer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--line);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 48px;
+  padding: 64px 0 48px;
+}
+.footer-brand-name {
+  font-family: var(--display);
+  font-size: 28px;
+  font-style: italic;
+  color: var(--gold-lt);
+  margin-bottom: 12px;
+  line-height: 1;
+}
+.footer-tagline {
+  font-family: var(--ui);
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--faint);
+  font-weight: 300;
+  max-width: 220px;
+  margin-bottom: 18px;
+}
+.footer-hours {
+  font-family: var(--ui);
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--faint);
+  font-style: italic;
+}
+.footer-col-head {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+.footer-col ul {
+  list-style: none;
+  display: flex; flex-direction: column; gap: 11px;
+}
+.footer-col a {
+  font-family: var(--ui);
+  font-size: 14px;
+  color: #b8ac98;
+  font-weight: 300;
+  transition: color .2s;
+}
+.footer-col a:hover { color: var(--gold-lt); }
+.footer-base {
+  padding: 28px 0 40px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-copy {
+  font-family: var(--ui);
+  font-size: 11px;
+  color: #c8bca8;
+}
+.footer-social {
+  display: flex; gap: 22px;
+}
+.footer-social a {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--faint);
+  transition: color .2s;
+}
+.footer-social a:hover { color: var(--gold); }
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════════ */
+@media (max-width: 980px) {
+  .about-grid   { grid-template-columns: 1fr; }
+  .plate-frame  { max-width: 420px; margin: 0 auto; }
+  .menu-grid    { grid-template-columns: 1fr 1fr; }
+  .exp-grid     { grid-template-columns: 1fr; }
+  .stat-bar     { grid-template-columns: repeat(2,1fr); }
+  .footer-grid  { grid-template-columns: 1fr 1fr; }
+  .tasting-layout { grid-template-columns: 1fr 32px 1fr; }
+}
+@media (max-width: 720px) {
+  .wrap { padding: 0 24px; }
+  .nav  { padding: 20px 24px; }
+  .nav-links { display: none; }
+  .nav.stuck { padding: 14px 24px; }
+  .sec  { padding: clamp(60px,10vw,90px) 0; }
+  .menu-grid { grid-template-columns: 1fr; }
+  .tasting-band { padding: 60px 24px; }
+  .tasting-layout { grid-template-columns: 1fr; }
+  .tasting-spine { display: none; }
+  .tasting-col.right { padding-top: 0; }
+  .ambiance-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .stat-bar { grid-template-columns: 1fr 1fr; }
+  .press { padding-left: 24px; padding-right: 24px; }
+  .course::before, .tasting-col.right .course::before { display: none; }
+  .tasting-col.right .course { padding-right: 0; text-align: left; }
+  .tasting-col.right .course-marker { float: none; }
+}
+@media (max-width: 480px) {
+  .title-xl { font-size: 42px; }
+  .hero-ctas { flex-direction: column; align-items: center; }
+  .stat-bar { grid-template-columns: 1fr; }
+  .about-nums { flex-direction: column; gap: 20px; }
+  .about-num-sep { width: 40px; height: 1px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-r],[data-rl],[data-rr] {
+    opacity: 1 !important; transform: none !important;
+    transition: none !important;
+  }
+}
+
+
+/* ── MENU CARD FOOD IMAGES ──────────────────────────────────────── */
+.menu-card-img {
+  width: calc(100% + 60px);
+  height: 200px;
+  margin: -36px -30px 24px -30px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.menu-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform .6s cubic-bezier(.25,.46,.45,.94);
+  display: block;
+}
+.menu-card:hover .menu-card-img img {
+  transform: scale(1.06);
+}
+.menu-card-img::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(9,7,4,.1) 0%,
+    rgba(9,7,4,.4) 60%,
+    rgba(9,7,4,.85) 100%
+  );
+}
+
+
+.planet-canvas {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none; display: block;
+}
+
+</style>
+</head>
+<body>
+
+<canvas class="planet-canvas" id="planetCanvas"></canvas>
+<div class="bg-slider" id="bgSlider">
+  <div class="bg-slide active" style="background-image: url('https://images.unsplash.com/photo-1544025162-841f3918a529?q=80&w=2070&auto=format&fit=crop')"></div>
+  <div class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=2070&auto=format&fit=crop')"></div>
+  <div class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1600891964092-4316c288032e?q=80&w=2070&auto=format&fit=crop')"></div>
+  <div class="bg-overlay"></div>
+</div>
+<div class="page" id="top">
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <a class="brand" href="#top">
+    <span class="brand-gem"></span>
+    Lumiere
+  </a>
+  <ul class="nav-links">
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#tasting">Tasting</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#reserve">Reserve</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('reserve').scrollIntoView({behavior:'smooth'})">Reserve a Table</button>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <p class="hero-kicker" data-r>Jakarta &bull; Est. 2008 &bull; 3 Michelin Stars</p>
+  <div class="hero-title title-xl" data-r style="--d:80ms">
+    Where Every<br>
+    <em>Dish</em> <strong>Becomes</strong><br>
+    <em>a Memory</em>
+  </div>
+  <div class="hero-line" data-r style="--d:200ms"></div>
+  <p class="hero-sub" data-r style="--d:260ms">Fine Dining &bull; Seasonal Tasting Menus &bull; Private Dining</p>
+  <div class="hero-ctas" data-r style="--d:320ms">
+    <button class="btn btn-primary" onclick="document.getElementById('reserve').scrollIntoView({behavior:'smooth'})">Reserve Your Table</button>
+    <button class="btn btn-outline" onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})">View the Menu</button>
+  </div>
+</header>
+
+<!-- PRESS -->
+<div class="press" data-r style="--d:400ms">
+  <p class="press-label">Recognized by the world&rsquo;s finest</p>
+  <div class="press-row">
+    <span class="press-name">Guide Michelin</span>
+    <span class="press-name">World&rsquo;s 50 Best</span>
+    <span class="press-name">James Beard Award</span>
+    <span class="press-name">Wine Spectator</span>
+    <span class="press-name">Forbes Travel Guide</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="sec" id="about">
+  <div class="wrap about-grid">
+    <!-- Copy -->
+    <div class="about-copy">
+      <span class="eyebrow" data-rl>Our Philosophy</span>
+      <h2 class="title-lg" data-rl style="--d:80ms">Cuisine as<br><em>Living Art</em></h2>
+      <p class="body-txt" data-rl style="--d:160ms">
+        At Lumiere, dining is one of the most intimate forms of human connection.
+        Each plate is a canvas &mdash; our chefs paint with the finest seasonal produce,
+        rare spices, and techniques perfected over two decades.
+      </p>
+      <p class="body-txt" data-rl style="--d:210ms">
+        From hand-dived Hokkaido scallops to white truffles from P&eacute;rigord &mdash;
+        every ingredient is chosen for its singular perfection, never convenience.
+      </p>
+      <div class="about-nums" data-rl style="--d:270ms">
+        <div class="about-num-item">
+          <div class="about-num-val">16</div>
+          <div class="about-num-lbl">Years of Excellence</div>
+        </div>
+        <div class="about-num-sep"></div>
+        <div class="about-num-item">
+          <div class="about-num-val">3</div>
+          <div class="about-num-lbl">Michelin Stars</div>
+        </div>
+        <div class="about-num-sep"></div>
+        <div class="about-num-item">
+          <div class="about-num-val">7</div>
+          <div class="about-num-lbl">Signature Menus</div>
+        </div>
+      </div>
+    </div>
+    <!-- Plate Visual -->
+    <div class="plate-frame" data-rr style="--d:120ms">
+      <!-- Slide 1 -->
+      <div class="plate-slide active">
+        <div class="plate-inner">
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="plateBg" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#2a1e0c"/>
+                <stop offset="100%" stop-color="#0a0704"/>
+              </radialGradient>
+              <radialGradient id="plateRim" cx="50%" cy="50%">
+                <stop offset="86%" stop-color="transparent"/>
+                <stop offset="93%" stop-color="#c9a84c" stop-opacity=".5"/>
+                <stop offset="100%" stop-color="transparent"/>
+              </radialGradient>
+              <radialGradient id="plateInner" cx="50%" cy="50%">
+                <stop offset="54%" stop-color="transparent"/>
+                <stop offset="60%" stop-color="#c9a84c" stop-opacity=".16"/>
+                <stop offset="64%" stop-color="transparent"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="100" cy="112" rx="88" ry="12" fill="rgba(201,168,76,.06)"/>
+            <circle cx="100" cy="100" r="88" fill="url(#plateBg)"/>
+            <circle cx="100" cy="100" r="88" fill="url(#plateRim)"/>
+            <circle cx="100" cy="100" r="73" fill="url(#plateInner)"/>
+            <path d="M70 108 Q82 126 106 118 Q128 112 138 122" stroke="#c9a84c" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".5"/>
+            <ellipse cx="100" cy="98" rx="28" ry="18" fill="#3c2510" opacity=".94"/>
+            <ellipse cx="100" cy="96" rx="25" ry="16" fill="#5a3a18"/>
+            <ellipse cx="100" cy="94" rx="21" ry="13" fill="#784e22"/>
+            <path d="M98 89 Q94 79 91 71" stroke="#4a7c3f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            <ellipse cx="91" cy="71" rx="3.5" ry="2.5" fill="#6aaf5e" transform="rotate(-20 91 71)" opacity=".9"/>
+            <circle cx="86" cy="83" r="1.1" fill="#f0d580" opacity=".8"/>
+            <circle cx="114" cy="85" r=".9" fill="#f0d580" opacity=".7"/>
+          </svg>
+          <span class="plate-caption">Signature Creation</span>
+        </div>
+        <div class="plate-badge">
+          <span class="plate-badge-name">Wagyu A5 &bull; Black Truffle</span>
+          <span class="plate-badge-note">Chef&rsquo;s Signature &bull; Since 2014</span>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="plate-slide">
+        <div class="plate-inner">
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="100" cy="112" rx="88" ry="12" fill="rgba(201,168,76,.06)"/>
+            <circle cx="100" cy="100" r="88" fill="url(#plateBg)"/>
+            <circle cx="100" cy="100" r="88" fill="url(#plateRim)"/>
+            <circle cx="100" cy="100" r="73" fill="url(#plateInner)"/>
+            <circle cx="100" cy="96" r="22" fill="#fff5e6" opacity=".9"/>
+            <circle cx="100" cy="94" r="18" fill="#ffeadd"/>
+            <circle cx="100" cy="85" r="7" fill="#1a1a1a"/>
+            <circle cx="98" cy="83" r="2" fill="#4a4a4a"/>
+            <circle cx="102" cy="86" r="1.5" fill="#4a4a4a"/>
+            <circle cx="100" cy="98" r="32" fill="transparent" stroke="#f0d580" stroke-width="2" stroke-dasharray="4 8" opacity=".6"/>
+          </svg>
+          <span class="plate-caption">Seasonal Reserve</span>
+        </div>
+        <div class="plate-badge">
+          <span class="plate-badge-name">Hokkaido Scallop &bull; Osetra Caviar</span>
+          <span class="plate-badge-note">Spring Collection &bull; Limited Availability</span>
+        </div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="plate-slide">
+        <div class="plate-inner">
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="100" cy="112" rx="88" ry="12" fill="rgba(201,168,76,.06)"/>
+            <circle cx="100" cy="100" r="88" fill="url(#plateBg)"/>
+            <circle cx="100" cy="100" r="88" fill="url(#plateRim)"/>
+            <circle cx="100" cy="100" r="73" fill="url(#plateInner)"/>
+            <path d="M85 105 L115 105 L110 85 L90 85 Z" fill="#4a2b16"/>
+            <ellipse cx="100" cy="85" rx="10" ry="5" fill="#69391b"/>
+            <ellipse cx="100" cy="105" rx="15" ry="6" fill="#361f10"/>
+            <path d="M75 100 Q100 115 125 95" stroke="#990000" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+          </svg>
+          <span class="plate-caption">Masterpiece Dessert</span>
+        </div>
+        <div class="plate-badge">
+          <span class="plate-badge-name">Valrhona Grand Cru &bull; Raspberry</span>
+          <span class="plate-badge-note">Pastry Chef&rsquo;s Special</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU CARDS -->
+<section class="sec" id="menu">
+  <div class="wrap">
+    <div class="menu-head">
+      <span class="eyebrow" data-r>Culinary Offerings</span>
+      <h2 class="title-lg" data-r style="--d:80ms">Crafted with <em>Intention</em></h2>
+      <p class="body-txt" style="margin:14px auto 0;text-align:center" data-r style="--d:150ms">
+        From our live seafood counter to our dry-aged meat cellar, every element of Lumiere is built around obsessive quality and the pursuit of the perfect bite.
+      </p>
+    </div>
+    <div class="menu-grid">
+
+      <!-- 01 Seafood -->
+      <div class="menu-card" data-r>
+        <div class="menu-card-img"><img src="https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=600&q=80" alt="Seafood & Caviar" loading="lazy"></div>
+        <div class="menu-card-no">01</div>
+        <svg class="menu-icon" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 31 Q27 15 44 31 Q40 43 27 45 Q14 43 10 31Z" fill="rgba(201,168,76,.09)" stroke="rgba(201,168,76,.28)" stroke-width="1"/>
+          <path d="M16 31 Q27 21 38 31 Q34 39 27 41 Q20 39 16 31Z" fill="rgba(201,168,76,.13)"/>
+          <ellipse cx="27" cy="33" rx="6" ry="5" fill="rgba(224,202,162,.6)"/>
+          <circle cx="24" cy="32" r="2" fill="rgba(255,255,255,.42)"/>
+          <circle cx="35" cy="21" r="5" fill="rgba(222,222,240,.72)" stroke="rgba(201,168,76,.35)" stroke-width="1"/>
+          <circle cx="33" cy="19" r="1.4" fill="rgba(255,255,255,.52)"/>
+        </svg>
+        <h3>Seafood &amp; Caviar</h3>
+        <p>Live Hokkaido sea urchin, Oscietra caviar service, and oysters flown in daily from Brittany &mdash; served at the peak of their natural sweetness.</p>
+        <span class="menu-tag">Live Counter</span>
+      </div>
+
+      <!-- 02 Wagyu -->
+      <div class="menu-card" data-r style="--d:80ms">
+        <div class="menu-card-img"><img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80" alt="Wagyu & Prime Cuts" loading="lazy"></div>
+        <div class="menu-card-no">02</div>
+        <svg class="menu-icon" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 25 Q19 15 31 18 Q43 16 43 25 Q45 34 35 38 Q27 42 19 38 Q8 34 10 25Z" fill="rgba(80,40,15,.75)" stroke="rgba(201,168,76,.22)" stroke-width="1"/>
+          <path d="M13 25 Q22 17 31 20 Q40 18 40 25 Q41 31 33 35 Q27 38 21 35 Q12 31 13 25Z" fill="rgba(100,55,20,.65)"/>
+          <path d="M20 23 Q25 20 30 24 Q34 28 31 33" stroke="rgba(220,188,136,.35)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M24 20 Q30 22 27 29" stroke="rgba(220,188,136,.25)" stroke-width="1" fill="none" stroke-linecap="round"/>
+          <path d="M15 27 Q21 24 26 28" stroke="rgba(28,14,4,.7)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M18 32 Q25 29 30 32" stroke="rgba(28,14,4,.7)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="22" cy="22" rx="5" ry="2.5" fill="rgba(201,168,76,.22)" opacity=".85"/>
+        </svg>
+        <h3>Wagyu &amp; Prime Cuts</h3>
+        <p>A5 Kagoshima wagyu, 45-day dry-aged Charolais, and Iberian secreto &mdash; carved tableside from our custom dry-age cabinet.</p>
+        <span class="menu-tag">Dry-Age Cellar</span>
+      </div>
+
+      <!-- 03 Truffle -->
+      <div class="menu-card" data-r style="--d:160ms">
+        <div class="menu-card-img"><img src="https://images.unsplash.com/photo-1602253057119-44d745d9b860?w=600&q=80" alt="Truffles & Foraging" loading="lazy"></div>
+        <div class="menu-card-no">03</div>
+        <svg class="menu-icon" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="27" cy="25" rx="16" ry="11" fill="rgba(58,38,18,.86)" stroke="rgba(201,168,76,.2)" stroke-width="1"/>
+          <ellipse cx="27" cy="23" rx="13" ry="9" fill="rgba(78,52,26,.7)"/>
+          <circle cx="21" cy="22" r="2.5" fill="rgba(46,28,10,.82)"/>
+          <circle cx="29" cy="19" r="3" fill="rgba(46,28,10,.82)"/>
+          <circle cx="34" cy="24" r="2.2" fill="rgba(46,28,10,.82)"/>
+          <circle cx="24" cy="27" r="1.8" fill="rgba(46,28,10,.82)"/>
+          <ellipse cx="27" cy="37" rx="11" ry="2.5" fill="rgba(118,88,48,.55)" stroke="rgba(201,168,76,.12)" stroke-width=".8"/>
+          <ellipse cx="27" cy="40" rx="9" ry="1.8" fill="rgba(98,72,38,.45)"/>
+          <circle cx="18" cy="18" r=".9" fill="#f0d580" opacity=".7"/>
+          <circle cx="35" cy="20" r=".9" fill="#f0d580" opacity=".7"/>
+          <circle cx="27" cy="15" r=".8" fill="#f0d580" opacity=".82"/>
+        </svg>
+        <h3>Truffles &amp; Foraging</h3>
+        <p>White Alba truffles in season, black P&eacute;rigord year-round, and wild forest ingredients hand-foraged by our sourcing team weekly.</p>
+        <span class="menu-tag">Seasonal &amp; Rare</span>
+      </div>
+
+      <!-- 04 Wine -->
+      <div class="menu-card" data-r style="--d:0ms">
+        <div class="menu-card-img"><img src="https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&q=80" alt="Wine & Pairings" loading="lazy"></div>
+        <div class="menu-card-no">04</div>
+        <svg class="menu-icon" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 9 L33 9 L37 25 Q37 35 27 37 Q17 35 17 25 Z" fill="rgba(118,18,28,.45)" stroke="rgba(201,168,76,.28)" stroke-width="1"/>
+          <path d="M23 11 L31 11 L35 24 Q35 33 27 35 Q19 33 19 24 Z" fill="rgba(138,28,38,.38)"/>
+          <path d="M19 25 Q19 33 27 35 Q35 33 35 25 Z" fill="rgba(158,28,48,.62)"/>
+          <line x1="27" y1="37" x2="27" y2="45" stroke="rgba(201,168,76,.35)" stroke-width="1.5"/>
+          <ellipse cx="27" cy="46" rx="7" ry="2" fill="rgba(201,168,76,.16)" stroke="rgba(201,168,76,.28)" stroke-width=".8"/>
+          <path d="M22 13 Q23 18 22 25" stroke="rgba(255,255,255,.16)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+        <h3>Wine &amp; Pairings</h3>
+        <p>Our cellar holds over 2,400 labels spanning six decades. Each tasting menu course is paired by our Master Sommelier with absolute precision.</p>
+        <span class="menu-tag">2,400+ Labels</span>
+      </div>
+
+      <!-- 05 Dessert -->
+      <div class="menu-card" data-r style="--d:80ms">
+        <div class="menu-card-img"><img src="https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&q=80" alt="Patisserie & Desserts" loading="lazy"></div>
+        <div class="menu-card-no">05</div>
+        <svg class="menu-icon" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 31 Q13 20 27 18 Q41 20 41 31 Q41 38 27 38 Q13 38 13 31Z" fill="rgba(38,18,8,.92)" stroke="rgba(201,168,76,.22)" stroke-width="1"/>
+          <path d="M15 31 Q15 22 27 20 Q39 22 39 31 Q39 35 27 35 Q15 35 15 31Z" fill="rgba(54,28,12,.78)"/>
+          <ellipse cx="21" cy="25" rx="5.5" ry="3" fill="rgba(78,42,18,.5)" opacity=".8"/>
+          <path d="M24 19 Q27 14 30 19" stroke="#c9a84c" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+          <circle cx="27" cy="14" r="2.5" fill="#c9a84c" opacity=".72"/>
+          <ellipse cx="27" cy="40" rx="13" ry="2.8" fill="rgba(201,168,76,.13)"/>
+          <circle cx="16" cy="37" r="3" fill="rgba(178,28,58,.72)"/>
+          <circle cx="36" cy="37" r="2.5" fill="rgba(178,28,58,.62)"/>
+          <circle cx="13" cy="33" r="1.8" fill="rgba(158,18,48,.52)"/>
+        </svg>
+        <h3>Patisserie &amp; Desserts</h3>
+        <p>Valrhona single-origin chocolate constructions, mille-feuille with Tahitian vanilla, and seasonal fruit compositions by our Pastry Chef.</p>
+        <span class="menu-tag">House Chocolatier</span>
+      </div>
+
+      <!-- 06 Chef Table -->
+      <div class="menu-card" data-r style="--d:160ms">
+        <div class="menu-card-img"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80" alt="Chef's Table" loading="lazy"></div>
+        <div class="menu-card-no">06</div>
+        <svg class="menu-icon" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Chef knife -->
+          <path d="M11 40 L30 10 Q38 6 42 15 Q40 22 30 26 L15 43 Z" fill="rgba(58,58,68,.55)" stroke="rgba(201,168,76,.28)" stroke-width="1"/>
+          <path d="M13 40 L30 12 Q36 8 40 15 Q38 19 30 23 L17 41 Z" fill="rgba(78,78,94,.45)"/>
+          <path d="M20 34 L31 16" stroke="rgba(198,198,218,.22)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <rect x="8" y="38" width="9" height="11" rx="2" fill="rgba(38,24,8,.92)" stroke="rgba(201,168,76,.28)" stroke-width=".8"/>
+          <line x1="10" y1="41" x2="15" y2="41" stroke="rgba(201,168,76,.2)" stroke-width=".8"/>
+          <line x1="10" y1="44" x2="15" y2="44" stroke="rgba(201,168,76,.2)" stroke-width=".8"/>
+        </svg>
+        <h3>Chef&rsquo;s Table</h3>
+        <p>An exclusive 8-seat counter facing our open kitchen &mdash; a front-row view of the craft, with a bespoke menu created for your evening alone.</p>
+        <span class="menu-tag">By Request Only</span>
+      </div>
+
+    </div><!-- .menu-grid -->
+  </div><!-- .wrap -->
+</section>
+
+<!-- TASTING MENU -->
+<section class="sec" id="tasting">
+  <div class="tasting-band">
+    <div class="tasting-head">
+      <span class="eyebrow" data-r>The Grand Menu</span>
+      <h2 class="title-lg" style="text-align:center" data-r style="--d:80ms">A Journey of <em>Eight Courses</em></h2>
+      <p data-r style="--d:160ms">Our signature tasting menu evolves with the seasons. No two evenings are ever identical.</p>
+    </div>
+    <div class="tasting-layout">
+
+      <!-- Left courses -->
+      <div class="tasting-col left">
+        <div class="course" data-rl>
+          <div class="course-no">Course I</div>
+          <div class="course-title">Amuse-Bouche</div>
+          <p class="course-desc">Three bites composed daily from what arrived at dawn &mdash; a preview of the chef&rsquo;s mood and the market&rsquo;s gift.</p>
+        </div>
+        <div class="course" data-rl style="--d:80ms">
+          <div class="course-no">Course III</div>
+          <div class="course-title">Crustacean &amp; <em>Sea Foam</em></div>
+          <p class="course-desc">Brittany lobster with champagne beurre blanc, sea herbs, and a light bisque foam served in a preserved shell.</p>
+        </div>
+        <div class="course" data-rl style="--d:160ms">
+          <div class="course-no">Course V</div>
+          <div class="course-title">The <em>Palate Reset</em></div>
+          <p class="course-desc">A single spoonful of lemon verbena granita with pink pepper &mdash; designed to cleanse and prepare for what follows.</p>
+        </div>
+        <div class="course" data-rl style="--d:240ms">
+          <div class="course-no">Course VII</div>
+          <div class="course-title">The Cheese <em>Ritual</em></div>
+          <p class="course-desc">Eighteen aged farmhouse cheeses from France, wheeled tableside with house-baked walnut bread and quince compote.</p>
+        </div>
+      </div>
+
+      <!-- Centre spine -->
+      <div class="tasting-spine" data-r>
+        <div class="tasting-spine-dot"></div>
+        <div class="tasting-spine-line"></div>
+        <div class="tasting-spine-dot"></div>
+        <div class="tasting-spine-line"></div>
+        <div class="tasting-spine-dot"></div>
+        <div class="tasting-spine-line"></div>
+        <div class="tasting-spine-dot"></div>
+        <div class="tasting-spine-line"></div>
+        <div class="tasting-spine-end"></div>
+      </div>
+
+      <!-- Right courses -->
+      <div class="tasting-col right">
+        <div class="course" data-rr style="--d:40ms">
+          <div class="course-no">Course II</div>
+          <div class="course-title">Garden <em>Opening</em></div>
+          <p class="course-desc">Young vegetables from our partner farm, dressed with elderflower and wild herb oil harvested that very morning.</p>
+        </div>
+        <div class="course" data-rr style="--d:120ms">
+          <div class="course-no">Course IV</div>
+          <div class="course-title"><em>Terra</em> &amp; Truffle</div>
+          <p class="course-desc">Hokkaido potato gnocchi with black P&eacute;rigord truffle shaved tableside, aged parmesan, and a 24-hour consomm&eacute;.</p>
+        </div>
+        <div class="course" data-rr style="--d:200ms">
+          <div class="course-no">Course VI</div>
+          <div class="course-title">Wagyu <em>A5</em></div>
+          <p class="course-desc">Three preparations of Kagoshima A5 wagyu &mdash; seared, slow-cooked, and tartare &mdash; with bone marrow emulsion.</p>
+        </div>
+        <div class="course" data-rr style="--d:280ms">
+          <div class="course-no">Course VIII</div>
+          <div class="course-title"><em>Grand</em> Dessert</div>
+          <p class="course-desc">Dark Valrhona chocolate sphere cracked tableside, revealing a warm caramel heart with Tahitian vanilla ice cream.</p>
+        </div>
+      </div>
+
+    </div><!-- .tasting-layout -->
+  </div><!-- .tasting-band -->
+</section>
+
+<!-- EXPERIENCE -->
+<section class="sec" id="experience">
+  <div class="wrap">
+    <div class="exp-grid">
+      <!-- Copy -->
+      <div class="exp-copy">
+        <span class="eyebrow" data-rl>The Lumiere Experience</span>
+        <h2 class="title-lg" data-rl style="--d:80ms">Every Detail<br><em>Considered</em></h2>
+        <p class="body-txt" data-rl style="--d:150ms">
+          From the moment you are greeted to the final mignardises, every element of your evening is choreographed &mdash; the temperature of the room, the pace of service, the precise lighting as each course changes.
+        </p>
+        <p class="body-txt" data-rl style="--d:200ms">
+          Our head sommelier personally selects wine pairings for each reservation, and our kitchen is fully briefed on your dietary preferences before you arrive.
+        </p>
+      </div>
+      <!-- Live service panel -->
+      <div data-rr style="--d:100ms">
+        <div class="service-panel">
+          <div class="sp-head">
+            <span class="sp-title">Table 7 &bull; Tonight&rsquo;s Service</span>
+            <span class="sp-live"><span class="sp-dot"></span>Live</span>
+          </div>
+          <div class="sp-rows">
+            <div class="sp-row">
+              <span class="sp-num">I</span>
+              <span class="sp-name">Amuse-Bouche</span>
+              <span class="sp-status st-done">Served &#10003;</span>
+            </div>
+            <div class="sp-row">
+              <span class="sp-num">II</span>
+              <span class="sp-name">Garden Opening</span>
+              <span class="sp-status st-done">Served &#10003;</span>
+            </div>
+            <div class="sp-row">
+              <span class="sp-num">III</span>
+              <span class="sp-name">Crustacean &amp; Sea Foam</span>
+              <span class="sp-status st-now"><span class="st-live-dot"></span>Plating</span>
+            </div>
+            <div class="sp-row">
+              <span class="sp-num">IV</span>
+              <span class="sp-name">Terra &amp; Truffle</span>
+              <span class="sp-status st-wait">In Queue</span>
+            </div>
+            <div class="sp-row">
+              <span class="sp-num">V&ndash;VIII</span>
+              <span class="sp-name">Remaining Courses</span>
+              <span class="sp-status st-wait">Awaiting</span>
+            </div>
+          </div>
+          <div class="sp-prog">
+            <div class="sp-prog-lbl">
+              <span>Evening Progress</span>
+              <span>Course 3 of 8</span>
+            </div>
+            <div class="sp-track"><div class="sp-fill"></div></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- .exp-grid -->
+
+    <!-- Stat bar -->
+    <div class="stat-bar">
+      <div class="stat-cell" data-r>
+        <div class="stat-val">3<em>&#9733;</em></div>
+        <div class="stat-lbl">Michelin Stars</div>
+      </div>
+      <div class="stat-cell" data-r style="--d:80ms">
+        <div class="stat-val">98<em>%</em></div>
+        <div class="stat-lbl">Guest Return Rate</div>
+      </div>
+      <div class="stat-cell" data-r style="--d:160ms">
+        <div class="stat-val">40<em>+</em></div>
+        <div class="stat-lbl">Ingredient Origins</div>
+      </div>
+      <div class="stat-cell" data-r style="--d:240ms">
+        <div class="stat-val">2.4<em>k</em></div>
+        <div class="stat-lbl">Wine Labels</div>
+      </div>
+    </div>
+
+  </div><!-- .wrap -->
+</section>
+
+<!-- AMBIANCE PANELS -->
+<section class="sec" style="padding-top:0" id="spaces">
+  <div class="ambiance-grid">
+    <div class="amb-panel" data-rl>
+      <div class="amb-bg-glyph">&#9402;</div>
+      <h3>The Wine <em>Cellar</em></h3>
+      <p>Walk through our temperature-controlled cellar housing 2,400 labels. Your sommelier will guide you through regions, vintages, and the stories behind each bottle before your pairing is chosen.</p>
+    </div>
+    <div class="amb-panel" data-rr>
+      <div class="amb-bg-glyph">&#9400;</div>
+      <h3>Private <em>Dining</em> Rooms</h3>
+      <p>Three secluded rooms seating 6 to 24 guests, available for celebrations, corporate dinners, and proposals. Each carries its own bespoke menu and floral arrangement.</p>
+    </div>
+    <div class="amb-panel" data-rl style="--d:80ms">
+      <div class="amb-bg-glyph">&#9401;</div>
+      <h3>The Open <em>Kitchen</em></h3>
+      <p>Our dining room faces a full glass wall overlooking the kitchen &mdash; watch the silent ballet of 22 chefs working in absolute precision as your meal is composed live before you.</p>
+    </div>
+    <div class="amb-panel" data-rr style="--d:80ms">
+      <div class="amb-bg-glyph">&#9399;</div>
+      <h3>Garden <em>Terrace</em></h3>
+      <p>Open May through October &mdash; alfresco dining where live herbs and edible flowers grow alongside your table, and candlelight carries the evening toward midnight.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-wrap" id="reserve">
+  <p class="cta-kicker" data-r>Reserve Your Seat</p>
+  <h2 class="title-xl cta-title" data-r style="--d:80ms">
+    Begin an Evening<br>You Will <em>Never</em> Forget
+  </h2>
+  <p class="cta-body" data-r style="--d:180ms">
+    Tables are limited to 34 covers per evening. We recommend reserving at least three weeks in advance. Dietary requirements, occasion notes, and wine preferences are welcomed at booking.
+  </p>
+  <div class="cta-btns" data-r style="--d:260ms">
+    <button class="btn btn-primary">Reserve a Table</button>
+    <button class="btn btn-outline">Enquire for Private Dining</button>
+  </div>
+  <p class="cta-footnote" data-r style="--d:340ms">
+    Dress code: <b>Smart Elegant</b> &bull; Arrival: 30 min prior recommended &bull; Duration: Approx. 3.5 hrs
+  </p>
+</section>
+
+<!-- FOOTER -->
+<div class="footer-outer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-name">Lumiere</div>
+        <p class="footer-tagline">The fine dining destination for those who believe every meal should be a masterpiece of art, craft, and memory.</p>
+        <div class="footer-hours">
+          Tue &ndash; Sat &bull; 18:30 &ndash; 23:00<br>
+          Sunday Brunch &bull; 11:00 &ndash; 15:00<br>
+          Closed Monday
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5 class="footer-col-head">Dining</h5>
+        <ul>
+          <li><a href="#menu">Tasting Menu</a></li>
+          <li><a href="#menu">A La Carte</a></li>
+          <li><a href="#spaces">Chef&rsquo;s Table</a></li>
+          <li><a href="#spaces">Wine Cellar</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5 class="footer-col-head">Visit</h5>
+        <ul>
+          <li><a href="#reserve">Reservations</a></li>
+          <li><a href="#spaces">Private Events</a></li>
+          <li><a href="#">Gift Vouchers</a></li>
+          <li><a href="#">Dress Code</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5 class="footer-col-head">About</h5>
+        <ul>
+          <li><a href="#">The Chefs</a></li>
+          <li><a href="#">Our Story</a></li>
+          <li><a href="#">Press &amp; Awards</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+      <div class="footer-base">
+        <span class="footer-copy">&copy; <span id="yr"></span> Lumiere Fine Dining. All rights reserved.</span>
+        <div class="footer-social">
+          <a href="#">Instagram</a>
+          <a href="#">Facebook</a>
+          <a href="#">TripAdvisor</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .page -->
+
+
+<script type="module">
+
+<section class="section" style="padding-top:0" id="ambiance"><div class="ambiance-grid">
+<div class="ambiance-card" data-rl><div class="ambiance-bg">&#127863;</div><h3>The Wine <em>Cellar</em></h3><p>Walk through our temperature-controlled cellar housing 2,400 labels. Your sommelier will guide you through regions, vintages, and the stories behind each bottle.</p></div>
+<div class="ambiance-card" data-rr><div class="ambiance-bg">&#128092;</div><h3>Private <em>Dining</em> Rooms</h3><p>Three secluded private rooms seating 6 to 24 guests, available for celebrations, corporate dinners, and proposals. Each room carries its own bespoke menu.</p></div>
+<div class="ambiance-card" data-rl style="--rd:100ms"><div class="ambiance-bg">&#127817;</div><h3>The Open <em>Kitchen</em></h3><p>Our main dining room faces a full glass wall overlooking the kitchen &mdash; watch the ballet of 22 chefs working in silence and precision as your meal is composed live.</p></div>
+<div class="ambiance-card" data-rr style="--rd:100ms"><div class="ambiance-bg">&#127800;</div><h3>Garden <em>Terrace</em></h3><p>Open May through October &mdash; alfresco dining where live herbs and edible flowers grow alongside your table, and candles light the evening into midnight.</p></div>
+</div></section>
+<section class="cta-section" id="reservations">
+<p class="cta-label" data-reveal>Reserve Your Seat</p>
+<h2 class="cta-title" data-reveal style="--rd:80ms">Begin an Evening<br>You Will <em>Never Forget</em></h2>
+<p class="cta-body" data-reveal style="--rd:180ms">Tables are limited to 34 covers per evening. We recommend reserving at least 3 weeks in advance. Dietary requirements, occasion notes, and wine preferences are welcomed at booking.</p>
+<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap" data-reveal style="--rd:260ms"><button class="btn-gold" style="font-size:12px;padding:18px 52px">Reserve a Table</button><button class="btn-ghost" style="font-size:12px;padding:17px 48px">Enquire for Private Dining</button></div>
+<p class="cta-note" data-reveal style="--rd:340ms">Dress code: <em>Smart Elegant</em> &bull; Arrival: 30 min prior recommended &bull; Duration: Approx. 3.5 hrs</p>
+</section>
+<div class="footer-wrap"><footer>
+<div><div class="footer-name">Lumiere</div><p class="footer-desc">The fine dining destination for those who believe every meal should be a masterpiece of art, craft, and memory.</p><div class="footer-hours">Tue &ndash; Sat &bull; 18:30 &ndash; 23:00<br>Sunday Brunch &bull; 11:00 &ndash; 15:00<br>Closed Monday</div></div>
+<div class="footer-col"><h5 class="footer-col-title">Dining</h5><ul><li><a href="#menu">Tasting Menu</a></li><li><a href="#menu">A La Carte</a></li><li><a href="#ambiance">Chef's Table</a></li><li><a href="#ambiance">Wine Cellar</a></li></ul></div>
+<div class="footer-col"><h5 class="footer-col-title">Visit</h5><ul><li><a href="#">Reservations</a></li><li><a href="#ambiance">Private Events</a></li><li><a href="#">Gift Vouchers</a></li><li><a href="#">Dress Code</a></li></ul></div>
+<div class="footer-col"><h5 class="footer-col-title">About</h5><ul><li><a href="#">The Chefs</a></li><li><a href="#">Our Story</a></li><li><a href="#">Press &amp; Awards</a></li><li><a href="#">Careers</a></li></ul></div>
+<div class="footer-bottom"><span class="footer-copy">&copy; <span id="yr"></span> Lumiere Fine Dining. All rights reserved.</span><div class="footer-social"><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">TripAdvisor</a></div></div>
+</footer></div>
+</div>
+<script type="module">
+
+import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import Lenis from 'https://unpkg.com/lenis@1.3.23/dist/lenis.mjs';
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+const PRM = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+const CONFIG = {
+  rimColor:'#c1faff', rimPower:2.4, nightLights:10, terrainDepth:0.33, terrainShade:1.3,
+  oceanGlint:0.45, oceanDeep:0.12, oceanFlow:3, oceanFlowSpeed:0.8, oceanFlowScale:2.1,
+  glowColor:'#3a6cff', glowIntensity:3.35, planetRadius:1.95, spin:0.03, initRotation:2.07,
+  tilt:0.37, autoRotate:0,
+  cloud1Height:1.005, cloud1Opacity:0.6, cloud1Spin:0.06,
+  cloud2Height:1.03,  cloud2Opacity:0.5, cloud2Spin:0.14,
+  cloud3Height:1.075, cloud3Opacity:0.5, cloud3Spin:0.1,
+  bgColor:'#040a1e', flameColor:'#3a6cff', flameColor2:'#c1faff', flameAmt:0.15,
+  atmoColor:'#9fc4ff', atmoCount:320, atmoSize:22, atmoSpeed:0.8,
+  starColor:'#cfe0ff', starCount:1400, starSize:1.6, starFlicker:1,
+  markerColor:'#ffd27a', markerCount:60, markerSize:16, markerSpeed:0.5,
+};
+const LAYERS = { NONE:0, TORUS_SCENE:1, BLOOM_SCENE:2, ENTIRE_SCENE:3 };
+const ASSET = 'https://api.getlayers.ai/storage/v1/object/public/public/assets/ascend-d9857ad1f2';
+
+const Lerp = (a,b,t) => a+(b-a)*t;
+const clampV = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+function hexToVec3(hex){
+  const r=parseInt(hex.slice(1,3),16)/255, g=parseInt(hex.slice(3,5),16)/255, b=parseInt(hex.slice(5,7),16)/255;
+  return new THREE.Vector3(r,g,b);
+}
+function smoothstepF(t){ return t*t*(3-2*t); }
+function sample(stops,p){
+  for(let i=0;i<stops.length-1;i++){
+    const a=stops[i], b=stops[i+1];
+    if(p>=a.p && p<=b.p){ const t=(p-a.p)/(b.p-a.p); return Lerp(a.v,b.v,smoothstepF(t)); }
+  }
+  return stops[stops.length-1].v;
+}
+
+const SNOISE = `
+vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+1.0*C.xxx;vec3 x2=x0-i2+2.0*C.xxx;vec3 x3=x0-1.0+3.0*C.xxx;
+  i=mod(i,289.0);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=1.0/7.0;vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+  vec4 m=max(0.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}`;
+
+const canvas = document.getElementById('planetCanvas');
+let W = window.innerWidth, H = window.innerHeight;
+
+const renderer = new THREE.WebGL1Renderer({canvas, antialias:true});
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(W,H);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(40, W/H, 0.1, 200);
+camera.position.set(0,0,8);
+camera.layers.enable(LAYERS.TORUS_SCENE);
+camera.layers.enable(LAYERS.BLOOM_SCENE);
+camera.layers.enable(LAYERS.ENTIRE_SCENE);
+scene.add(camera);
+
+const ambLight = new THREE.AmbientLight(0xffffff,1.8);
+ambLight.layers.set(LAYERS.ENTIRE_SCENE);
+scene.add(ambLight);
+const dirLight = new THREE.DirectionalLight(0xffffff,0.8);
+dirLight.position.set(0,10,2);
+dirLight.layers.set(LAYERS.ENTIRE_SCENE);
+scene.add(dirLight);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06;
+controls.enablePan = false; controls.enabled = false;
+controls.autoRotate = true; controls.autoRotateSpeed = CONFIG.autoRotate;
+controls.minDistance = 3.5; controls.maxDistance = 16;
+controls.target.set(0,0,0);
+
+const FinalPass = {
+  uniforms:{
+    iTime:{value:0}, tDiffuse:{value:null}, torusTexture:{value:null},
+    bloomTexture:{value:null}, haloTexture:{value:null},
+    uBg:{value:hexToVec3(CONFIG.bgColor)},
+    uFlameA:{value:hexToVec3(CONFIG.flameColor)},
+    uFlameB:{value:hexToVec3(CONFIG.flameColor2)},
+    uFlameAmt:{value:CONFIG.flameAmt},
+  },
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
+  fragmentShader:`
+    uniform float iTime;
+    uniform sampler2D tDiffuse,bloomTexture,torusTexture,haloTexture;
+    uniform vec3 uBg,uFlameA,uFlameB;
+    uniform float uFlameAmt;
+    varying vec2 vUv;
+    vec3 warp3d(vec3 pos,float t){
+      float curv=.8,a=1.9,b=0.7;pos*=2.;
+      pos.x+=curv*sin(t+a*pos.y)+t*b;pos.y+=curv*cos(t+a*pos.x);
+      pos.y+=curv*sin(t+a*pos.z)+t*b;pos.z+=curv*cos(t+a*pos.y);
+      pos.z+=curv*sin(t+a*pos.x)+t*b;pos.x+=curv*cos(t+a*pos.z);
+      return 0.5+0.5*cos(pos.xyz+vec3(1,2,4));
+    }
+    void main(){
+      vec2 uv=2.*vUv-1.;
+      vec3 w=pow(warp3d(vec3(uv.x,sin(uv.y),uv.y),iTime*1.5),vec3(1.5));
+      vec3 flame=1.5*uFlameA*w.x;flame*=w.y;flame+=uFlameB*w.z;
+      flame*=smoothstep(0.25,1.,abs(uv.y));
+      float md=smoothstep(-0.7,1.,-uv.y*uv.x);flame*=md*md;
+      vec3 bg=uBg*(1.0-0.4*length(uv));
+      vec3 halo=texture2D(haloTexture,vUv).xyz;
+      gl_FragColor=vec4(bg+flame*uFlameAmt+texture2D(bloomTexture,vUv).xyz+texture2D(torusTexture,vUv).xyz+texture2D(tDiffuse,vUv).xyz+halo,1.);
+    }`,
+};
+
+const haloRT = new THREE.WebGLRenderTarget(W,H);
+
+const torusComposer = new EffectComposer(renderer);
+torusComposer.renderToScreen = false;
+torusComposer.addPass(new RenderPass(scene,camera));
+torusComposer.addPass(new ShaderPass(GammaCorrectionShader));
+torusComposer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H),0.22,0.2,0));
+torusComposer.addPass(new ShaderPass(CopyShader));
+
+const bloomComposer = new EffectComposer(renderer);
+bloomComposer.renderToScreen = false;
+bloomComposer.addPass(new RenderPass(scene,camera));
+bloomComposer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H),0.5,0.6,0));
+bloomComposer.addPass(new ShaderPass(GammaCorrectionShader));
+
+const finalPass = new ShaderPass(FinalPass);
+finalPass.uniforms.haloTexture.value = haloRT.texture;
+const finalComposer = new EffectComposer(renderer);
+finalComposer.addPass(new RenderPass(scene,camera));
+finalComposer.addPass(finalPass);
+
+const STOPS_X=[{p:0,v:0},{p:0.32,v:-3.1},{p:0.64,v:3.2},{p:1,v:0}];
+const STOPS_Y=[{p:0,v:-4.5},{p:0.32,v:0.55},{p:0.64,v:0.45},{p:1,v:0.15}];
+const STOPS_S=[{p:0,v:2.15},{p:0.32,v:1.0},{p:0.64,v:0.92},{p:1,v:1.12}];
+
+const worldGroup = new THREE.Group();
+worldGroup.position.set(STOPS_X[0].v, STOPS_Y[0].v, 0);
+worldGroup.scale.setScalar(STOPS_S[0].v);
+scene.add(worldGroup);
+
+const planetGroup = new THREE.Group();
+planetGroup.rotation.z = CONFIG.tilt;
+worldGroup.add(planetGroup);
+
+const cloudGroup = new THREE.Group();
+cloudGroup.rotation.z = CONFIG.tilt;
+cloudGroup.visible = false;
+worldGroup.add(cloudGroup);
+
+const glowMat = new THREE.ShaderMaterial({
+  transparent:true, side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending,
+  uniforms:{uGlow:{value:hexToVec3(CONFIG.glowColor)},uIntensity:{value:CONFIG.glowIntensity}},
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform vec3 uGlow;uniform float uIntensity;varying vec2 vUv;
+    void main(){float d=length(vUv-0.5)*2.0;float a=pow(clamp(1.0-d,0.0,1.0),2.2);gl_FragColor=vec4(uGlow*a*uIntensity,a);}`,
+});
+const glowMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), glowMat);
+glowMesh.scale.setScalar(CONFIG.planetRadius*2.3);
+worldGroup.add(glowMesh);
+
+let planetTime=0, cloudTime=0, starTime=0, markerTime=0;
+
+function injectPlanetShader(mat, nightTex){
+  mat.onBeforeCompile = shader => {
+    shader.uniforms.time = {value:planetTime};
+    shader.uniforms.noiseScale = {value:30};
+    shader.uniforms.speedX = {value:1.5};
+    shader.uniforms.speedY = {value:2.0};
+    shader.uniforms.speedZ = {value:2.5};
+    shader.uniforms.rimColor = {value:hexToVec3(CONFIG.rimColor)};
+    shader.uniforms.rimPower = {value:CONFIG.rimPower};
+    shader.uniforms.nightBlendTexture = {value:nightTex};
+    shader.uniforms.nightLights = {value:CONFIG.nightLights};
+    shader.uniforms.terrainDepth = {value:CONFIG.terrainDepth};
+    shader.uniforms.terrainShade = {value:CONFIG.terrainShade};
+    shader.uniforms.oceanGlint = {value:CONFIG.oceanGlint};
+    shader.uniforms.oceanDeep = {value:CONFIG.oceanDeep};
+    shader.uniforms.oceanFlow = {value:CONFIG.oceanFlow};
+    shader.uniforms.oceanFlowSpeed = {value:CONFIG.oceanFlowSpeed};
+    shader.uniforms.oceanFlowScale = {value:CONFIG.oceanFlowScale};
+    mat._shaderRef = shader;
+    shader.vertexShader = 'varying vec2 vCustomUv;\n' + shader.vertexShader.replace('void main(){','void main(){\nvCustomUv=uv;');
+    const ub = `uniform float time,noiseScale,speedX,speedY,speedZ,rimPower,nightLights,terrainDepth,terrainShade,oceanGlint,oceanDeep,oceanFlow,oceanFlowSpeed,oceanFlowScale;
+      uniform vec3 rimColor;uniform sampler2D nightBlendTexture;varying vec2 vCustomUv;${SNOISE}`;
+    shader.fragmentShader = ub + shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <dithering_fragment>',`
+      #include <dithering_fragment>
+      vec3 normalizedNormal=normalize(vNormal);
+      vec3 viewDir=normalize(vViewPosition);
+      float rim=1.0-max(dot(viewDir,normalizedNormal),0.0);
+      rim=pow(rim,rimPower);rim=pow(rim,1.5);rim*=0.7;
+      vec3 currentColor=gl_FragColor.rgb;
+      float blueDom=currentColor.b-max(currentColor.r,currentColor.g);
+      float waterMask=clamp(smoothstep(-0.005,0.03,blueDom),0.0,1.0);
+      float shimmer=snoise(vec3(vCustomUv.x*noiseScale+time*speedX,vCustomUv.y*noiseScale-time*speedY,time*speedZ));
+      gl_FragColor.rgb+=waterMask*shimmer*0.025;
+      float fT=time*oceanFlowSpeed*4.0;
+      float fS=4.0*oceanFlowScale;
+      float warp=snoise(vec3(vCustomUv.x*fS-fT*0.5,vCustomUv.y*fS+fT*0.4,fT*0.5));
+      float flow=snoise(vec3(vCustomUv.x*fS*2.0+fT*0.6+warp,vCustomUv.y*fS*2.0-fT*0.5,fT*0.7));
+      flow=warp*0.6+flow*0.4;
+      gl_FragColor.rgb+=waterMask*flow*0.12*oceanFlow;
+      gl_FragColor.rgb=mix(gl_FragColor.rgb,vec3(0.01,0.06,0.16),waterMask*oceanDeep);
+      vec3 finalColor=mix(gl_FragColor.rgb,rimColor,rim);
+      gl_FragColor=vec4(finalColor,1.0);
+      vec3 surfPos=-vViewPosition;
+      float terrH=dot(texture2D(map,vCustomUv).rgb,vec3(0.299,0.587,0.114));
+      vec3 sigX=dFdx(surfPos),sigY=dFdy(surfPos);
+      vec3 vR1=cross(sigY,normalizedNormal),vR2=cross(normalizedNormal,sigX);
+      float fDet=dot(sigX,vR1);
+      vec3 vGrad=sign(fDet)*(dFdx(terrH)*vR1+dFdy(terrH)*vR2);
+      vec3 bumpedNormal=normalize(abs(fDet)*normalizedNormal-terrainDepth*vGrad);
+      vec3 shadeNormal=mix(bumpedNormal,normalizedNormal,waterMask);
+      vec3 cityLights=texture2D(nightBlendTexture,vCustomUv).rgb*gl_FragColor.rgb*nightLights;
+      vec3 viewSunDir=normalize(vec3(-0.9,0.18,0.4));
+      float ndl=dot(normalizedNormal,viewSunDir);
+      float dayAmt=smoothstep(-0.05,0.35,ndl);
+      float relief=dot(shadeNormal,viewSunDir)-ndl;
+      gl_FragColor.rgb*=clamp(1.0+relief*terrainShade*dayAmt,0.55,1.6);
+      float nightFactor=smoothstep(0.18,-0.30,ndl);
+      float lightsFactor=smoothstep(0.30,-0.35,ndl);
+      gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*0.08,nightFactor);
+      gl_FragColor.rgb+=cityLights*lightsFactor;
+      vec3 halfDir=normalize(viewSunDir+viewDir);
+      float ripple=snoise(vec3(vCustomUv*240.0,time*4.0));
+      float ndh=max(dot(normalizedNormal,halfDir)+ripple*0.02,0.0);
+      float glint=pow(ndh,140.0);
+      gl_FragColor.rgb+=glint*waterMask*dayAmt*oceanGlint*vec3(1.0,0.97,0.88);
+    `);
+  };
+}
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.5/');
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+const texLoader = new THREE.TextureLoader();
+
+let planetMesh=null, nightTex=null;
+
+function findMesh(o){if(o.isMesh)return o;for(const c of o.children){const r=findMesh(c);if(r)return r;}return null;}
+
+gltfLoader.load(ASSET+'/planet-lights.glb', gltf=>{
+  const m = findMesh(gltf.scene);
+  nightTex = m&&m.material&&m.material.map ? m.material.map : new THREE.Texture();
+  loadPlanet();
+}, undefined, ()=>{ nightTex = new THREE.Texture(); loadPlanet(); });
+
+function loadPlanet(){
+  gltfLoader.load(ASSET+'/planet.glb', gltf=>{
+    const mesh = findMesh(gltf.scene);
+    if(!mesh) return;
+    mesh.geometry.computeBoundingSphere();
+    const r = mesh.geometry.boundingSphere.radius;
+    mesh.scale.setScalar(CONFIG.planetRadius/r);
+    const mat = mesh.material.clone();
+    mat.metalness=0; mat.roughness=1; mat.envMapIntensity=0;
+    injectPlanetShader(mat, nightTex);
+    mesh.material = mat;
+    mesh.layers.set(LAYERS.ENTIRE_SCENE);
+    planetGroup.add(mesh);
+    planetMesh = mesh;
+    loadClouds(mesh);
+    startEntrance();
+  }, undefined, e=>console.warn('planet err',e));
+}
+
+function loadClouds(pMesh){
+  const defs=[
+    {h:CONFIG.cloud1Height,o:CONFIG.cloud1Opacity,s:CONFIG.cloud1Spin,ry:0.0,phase:0.0},
+    {h:CONFIG.cloud2Height,o:CONFIG.cloud2Opacity,s:CONFIG.cloud2Spin,ry:2.2,phase:13.0},
+    {h:CONFIG.cloud3Height,o:CONFIG.cloud3Opacity,s:CONFIG.cloud3Spin,ry:4.3,phase:27.0},
+  ];
+  texLoader.load(ASSET+'/planet-clouds.png', tex=>{
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.repeat.set(5,5);
+    defs.forEach(def=>{
+      const geo = new THREE.SphereGeometry(CONFIG.planetRadius*def.h,64,64);
+      const mat = new THREE.MeshStandardMaterial({map:tex,transparent:true,depthWrite:false});
+      mat._cloudSpin = def.s;
+      mat.onBeforeCompile = shader=>{
+        shader.uniforms.uTime={value:cloudTime};
+        shader.uniforms.noiseScale={value:20};
+        shader.uniforms.uSpeedX={value:1};
+        shader.uniforms.uSpeedY={value:2};
+        shader.uniforms.uSpeedZ={value:2};
+        shader.uniforms.uOpacity={value:def.o};
+        shader.uniforms.uPhase={value:def.phase};
+        mat._cloudShaderRef = shader;
+        shader.vertexShader='varying vec2 vCloudUv;\n'+shader.vertexShader.replace('void main(){','void main(){\nvCloudUv=uv;');
+        shader.fragmentShader=`uniform float uTime,noiseScale,uSpeedX,uSpeedY,uSpeedZ,uOpacity,uPhase;varying vec2 vCloudUv;\n${SNOISE}\n`+shader.fragmentShader;
+        shader.fragmentShader=shader.fragmentShader.replace('#include <dithering_fragment>',`
+          #include <dithering_fragment>
+          gl_FragColor.rgb=vec3(1.0);
+          float cloudNoise=snoise(vec3(vCloudUv.x*noiseScale+uTime*uSpeedX+uPhase,vCloudUv.y*noiseScale-uTime*uSpeedY+uPhase,uTime*uSpeedZ+uPhase));
+          float cloudNdv=max(dot(normalize(vNormal),normalize(vViewPosition)),0.0);
+          float cloudEdge=pow(1.0-cloudNdv,3.0);
+          float cloudMod=mix(cloudNoise,1.0,cloudEdge);
+          float cloudNdl=dot(normalize(vNormal),normalize(vec3(-0.9,0.18,0.4)));
+          float cloudDay=1.0-smoothstep(0.30,-0.30,cloudNdl)*0.9;
+          gl_FragColor.a*=cloudMod*uOpacity*cloudDay;
+        `);
+      };
+      const cMesh = new THREE.Mesh(geo,mat);
+      cMesh.rotation.y=def.ry; cMesh.renderOrder=2;
+      cMesh.layers.set(LAYERS.ENTIRE_SCENE);
+      cloudGroup.add(cMesh);
+    });
+    cloudGroup.visible=true;
+  });
+}
+
+(function buildStars(){
+  const N=CONFIG.starCount;
+  const pos=new Float32Array(N*3),seeds=new Float32Array(N),brights=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const th=Math.acos(2*Math.random()-1),ph=Math.random()*Math.PI*2,r=90;
+    pos[i*3]=r*Math.sin(th)*Math.cos(ph);
+    pos[i*3+1]=r*Math.sin(th)*Math.sin(ph);
+    pos[i*3+2]=r*Math.cos(th);
+    seeds[i]=Math.random()*100;
+    brights[i]=0.35+Math.random()*0.65;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('seed',new THREE.BufferAttribute(seeds,1));
+  geo.setAttribute('bright',new THREE.BufferAttribute(brights,1));
+  const mat=new THREE.ShaderMaterial({
+    blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,frustumCulled:false,
+    uniforms:{uTime:{value:0},uSize:{value:CONFIG.starSize},uFlicker:{value:CONFIG.starFlicker},uColor:{value:hexToVec3(CONFIG.starColor)},uRes:{value:new THREE.Vector2(W,H)}},
+    vertexShader:`attribute float seed;attribute float bright;uniform float uTime,uSize,uFlicker;uniform vec2 uRes;varying float vTw;
+      void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);float tw=0.6+0.4*sin(uTime*uFlicker+seed);vTw=bright*tw;
+        gl_PointSize=max(uSize*uRes.y/900.0*(90.0/max(-mv.z,1.0)),1.0);gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`uniform vec3 uColor;varying float vTw;
+      void main(){vec2 p=gl_PointCoord-0.5;float l=length(p);if(l>0.5)discard;
+        float core=smoothstep(0.5,0.0,l);gl_FragColor=vec4(uColor,core*vTw);}`,
+  });
+  const stars=new THREE.Points(geo,mat);
+  stars.layers.set(LAYERS.ENTIRE_SCENE);
+  stars.frustumCulled=false;
+  scene.add(stars);
+  window._starsMat=mat;
+})();
+
+(function buildMotes(){
+  const N=CONFIG.atmoCount;
+  const pos=new Float32Array(N*3),sizes=new Float32Array(N),seeds=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    pos[i*3]=(Math.random()*2-1);
+    pos[i*3+1]=(Math.random()*2-1);
+    pos[i*3+2]=(Math.random()*2-1);
+    sizes[i]=CONFIG.atmoSize*(0.4+Math.random());
+    seeds[i]=Math.random()*100;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('size',new THREE.BufferAttribute(sizes,1));
+  geo.setAttribute('seed',new THREE.BufferAttribute(seeds,1));
+  const mat=new THREE.ShaderMaterial({
+    blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,transparent:true,
+    uniforms:{uTime:{value:0},uRes:{value:new THREE.Vector2(W,H)},uColor:{value:hexToVec3(CONFIG.atmoColor)}},
+    vertexShader:`attribute float size;attribute float seed;uniform float uTime;uniform vec2 uRes;varying float vA;
+      vec3 warp(vec3 p,float t){float c=0.9,a=1.9,b=0.02,s=0.05;p*=2.;
+        p.x+=c*sin(s*t+a*p.y)+t*b;p.y+=c*cos(s*t+a*p.x);p.y+=c*sin(s*t+a*p.z)+t*b;
+        p.z+=c*cos(s*t+a*p.y);p.z+=c*sin(s*t+a*p.x)+t*b;p.x+=c*cos(s*t+a*p.z);
+        return cos(p+vec3(1,2,4));}
+      void main(){vec3 v=position*4.0+warp(position,uTime)*1.2;vec4 mv=modelViewMatrix*vec4(v,1.0);
+        float r=length(v);float farF=1.0-smoothstep(5.0,6.5,r);float nearF=smoothstep(0.0,0.5,-mv.z);
+        vA=farF*nearF;gl_PointSize=size*uRes.y/900.0/max(-mv.z,0.001);gl_PointSize=max(gl_PointSize,1.0);gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`uniform vec3 uColor;varying float vA;
+      void main(){vec2 p=gl_PointCoord-0.5;float l=length(p);if(l>0.5)discard;
+        float tex=smoothstep(0.5,0.0,l);gl_FragColor=vec4(uColor*tex,tex*vA*0.55);}`,
+  });
+  const motes=new THREE.Points(geo,mat);
+  motes.layers.set(LAYERS.ENTIRE_SCENE);
+  motes.frustumCulled=false;
+  motes.onBeforeRender=()=>{
+    const t=performance.now()/1000;
+    mat.uniforms.uTime.value=t*CONFIG.atmoSpeed*8;
+    finalPass.uniforms.iTime.value=t;
+    motes.position.copy(camera.position);
+    if(window._starsMat)window._starsMat.uniforms.uTime.value=starTime;
+  };
+  scene.add(motes);
+  window._motesMat=mat;
+})();
+
+const ENTRY_DUR=1.9, ENTRY_START_Y=-6.5;
+let entryT=0, entryActive=false;
+function startEntrance(){ if(!PRM){ entryActive=true; entryT=0; } }
+function entryOffset(dt){
+  if(!entryActive) return 0;
+  entryT+=dt;
+  const t=clampV(entryT/ENTRY_DUR,0,1);
+  const e=1-Math.pow(1-t,3);
+  const y=Lerp(ENTRY_START_Y,0,e);
+  if(t>=1) entryActive=false;
+  return y;
+}
+
+let curP=0, pTarget=0, curX=STOPS_X[0].v, curY=STOPS_Y[0].v, curS=STOPS_S[0].v, spinPhase=0;
+
+if(!PRM){
+  const lenis=new Lenis({duration:1.15,smoothWheel:true,touchMultiplier:1.5});
+  (function rl(t){lenis.raf(t);requestAnimationFrame(rl);})(0);
+}
+
+const reveals=document.querySelectorAll('[data-reveal]');
+if(PRM){ reveals.forEach(el=>el.classList.add('in')); }
+else{
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});
+  },{threshold:0.18,rootMargin:'0px 0px -8% 0px'});
+  reveals.forEach(el=>obs.observe(el));
+}
+
+let last=0;
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=clampV((now-last)/1000,0,0.05);
+  last=now;
+
+  const sh=document.body.scrollHeight, ih=window.innerHeight;
+  pTarget=clampV(window.scrollY/(sh-ih)||0,0,1);
+  curP+=(pTarget-curP)*Math.min(1,dt*4.5);
+
+  const sideScale=clampV(window.innerWidth/1200,0.5,1);
+  const tx=sample(STOPS_X,curP)*sideScale;
+  const ty=sample(STOPS_Y,curP);
+  const ts=sample(STOPS_S,curP);
+  const k=Math.min(1,dt*3.2);
+  curX=Lerp(curX,tx,k);
+  curY=Lerp(curY,ty,k);
+  curS=Lerp(curS,ts,k);
+
+  const ey=entryOffset(dt);
+  worldGroup.position.set(curX, curY+ey, 0);
+  worldGroup.scale.setScalar(curS);
+
+  spinPhase+=dt*CONFIG.spin;
+  planetGroup.children.forEach(m=>{
+    if(m.isMesh) m.rotation.y=CONFIG.initRotation+spinPhase+curP*Math.PI*1.6;
+  });
+
+  planetTime+=dt/12; cloudTime+=dt/20; starTime+=dt; markerTime+=dt;
+
+  planetGroup.children.forEach(m=>{
+    if(m.isMesh&&m.material&&m.material._shaderRef)
+      m.material._shaderRef.uniforms.time.value=planetTime;
+  });
+  cloudGroup.children.forEach(cm=>{
+    cm.rotation.y+=dt*cm.material._cloudSpin;
+    if(cm.material._cloudShaderRef)cm.material._cloudShaderRef.uniforms.uTime.value=cloudTime;
+  });
+  if(window._markerMat){
+    window._markerMat.uniforms.uTime.value=markerTime;
+    window._markerMat.uniforms.uRes.value.set(W,H);
+  }
+
+  glowMesh.quaternion.copy(camera.quaternion);
+  controls.update();
+
+  camera.layers.set(LAYERS.TORUS_SCENE); torusComposer.render();
+  finalPass.uniforms.torusTexture.value=torusComposer.renderTarget1.texture;
+  camera.layers.set(LAYERS.BLOOM_SCENE); bloomComposer.render();
+  finalPass.uniforms.bloomTexture.value=bloomComposer.renderTarget1.texture;
+  camera.layers.set(LAYERS.ENTIRE_SCENE); finalComposer.render();
+}
+requestAnimationFrame(animate);
+
+window.addEventListener('resize',()=>{
+  W=window.innerWidth; H=window.innerHeight;
+  camera.aspect=W/H; camera.updateProjectionMatrix();
+  renderer.setSize(W,H);
+  [torusComposer,bloomComposer,finalComposer].forEach(c=>{c.setSize(W,H);c.setPixelRatio(devicePixelRatio);});
+  if(window._motesMat)window._motesMat.uniforms.uRes.value.set(W,H);
+  if(window._starsMat)window._starsMat.uniforms.uRes.value.set(W,H);
+  if(window._markerMat)window._markerMat.uniforms.uRes.value.set(W,H);
+});
+
+</script>
+<script>
+// Nav scroll effect
+const nav=document.getElementById("mainNav");
+window.addEventListener("scroll",()=>{nav.classList.toggle("scrolled",window.scrollY>60);});
+// Reveal observer
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");obs.unobserve(e.target);}});},{threshold:0.15,rootMargin:"0px 0px -6% 0px"});
+document.querySelectorAll("[data-reveal],[data-rl],[data-rr]").forEach(el=>obs.observe(el));
+
+</script>
+<script>
+const navEl = document.getElementById('nav');
+if (navEl) {
+  window.addEventListener('scroll', () => { navEl.classList.toggle('stuck', window.scrollY > 56); });
+}
+
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('on');
+      ro.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.14, rootMargin: '0px 0px -6% 0px' });
+
+document.querySelectorAll('[data-r],[data-rl],[data-rr]').forEach(el => ro.observe(el));
+
+const yrEl = document.getElementById('yr');
+if (yrEl) { yrEl.textContent = new Date().getFullYear(); }
+
+// Carousel Logic
+setInterval(() => {
+  const bgs = document.querySelectorAll('.bg-slide');
+  if (bgs.length > 0) {
+    let activeIdx = Array.from(bgs).findIndex(el => el.classList.contains('active'));
+    bgs[activeIdx].classList.remove('active');
+    bgs[(activeIdx + 1) % bgs.length].classList.add('active');
+  }
+
+  const plates = document.querySelectorAll('.plate-slide');
+  if (plates.length > 0) {
+    let activeIdx = Array.from(plates).findIndex(el => el.classList.contains('active'));
+    plates[activeIdx].classList.remove('active');
+    plates[(activeIdx + 1) % plates.length].classList.add('active');
+  }
+}, 4500);
+</script>
+</body>
+</html>
